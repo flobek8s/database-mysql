@@ -1,0 +1,39 @@
+namespace: database
+
+mysql:
+  image:
+    repository: mysql
+    tag: "8.4.8"
+  port: 3306
+  storage: 5Gi
+  storageClass: longhorn
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+phpmyadmin:
+  image:
+    repository: phpmyadmin
+    tag: "5.2.3"
+  port: 80
+  host: mysql.phink8s.com
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 200m
+
+env:
+  - name: UPLOAD_LIMIT
+    value: "512M"
+  - name: MEMORY_LIMIT
+    value: "512M"
+
+ingress:
+  className: traefik

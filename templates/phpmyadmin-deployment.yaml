@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app: phpmyadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+        - name: phpmyadmin
+          image: "{{ .Values.phpmyadmin.image.repository }}:{{ .Values.phpmyadmin.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.phpmyadmin.port }}
+          env:
+            - name: PMA_HOST
+              value: mysql.database.svc.cluster.local
+            - name: PMA_PORT
+              value: {{ .Values.mysql.port | quote }}
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: MYSQL_ROOT_PASSWORD
+            - name: UPLOAD_LIMIT
+              value: "512M"
+          resources:
+            requests:
+              memory: {{ .Values.phpmyadmin.resources.requests.memory }}
+              cpu: {{ .Values.phpmyadmin.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.phpmyadmin.resources.limits.memory }}
+              cpu: {{ .Values.phpmyadmin.resources.limits.cpu }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
